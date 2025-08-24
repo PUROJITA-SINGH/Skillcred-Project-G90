@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceAI - E-commerce Price Prediction System</title>
+    
+    <!-- External CDN Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#2563eb',
+                        'secondary': '#64748b',
+                        'accent': '#f59e0b',
+                        'success': '#10b981',
+                        'danger': '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-inter bg-gray-50 min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-primary">
+                            <i class="fas fa-chart-line mr-2"></i>PriceAI
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="#dashboard" class="nav-link active px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                            <a href="#prediction" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Price Prediction</a>
+                            <a href="#analytics" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Analytics</a>
+                            <a href="#scraping" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Data Scraping</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <span id="connectionStatus" class="flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <i class="fas fa-circle text-gray-400 mr-1"></i>
+                            Connecting...
+                        </span>
+                    </div>
+                    <button class="md:hidden" id="mobileMenuBtn">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div class="md:hidden hidden" id="mobileMenu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
+                <a href="#dashboard" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
+                <a href="#prediction" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium">Price Prediction</a>
+                <a href="#analytics" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium">Analytics</a>
+                <a href="#scraping" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium">Data Scraping</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="tab-content">
+            <!-- Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-database text-primary text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Products</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalProducts">-</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-chart-line text-success text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Predictions Today</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="predictionsToday">-</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-robot text-accent text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Model Accuracy</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="modelAccuracy">-</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                    <div class="space-y-4" id="recentActivity">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <div class="animate-pulse">Loading recent activity...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Price Prediction Section -->
+        <section id="prediction" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Prediction Form -->
+                <div class="bg-white shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-magic text-primary mr-2"></i>Price Prediction
+                        </h3>
+                        <form id="predictionForm" class="space-y-4">
+                            <div>
+                                <label for="productUrl" class="block text-sm font-medium text-gray-700">Product URL</label>
+                                <input type="url" id="productUrl" name="productUrl" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+
+                                    placeholder="https://example.com/product/...">
+
+                            </div>
+
+
+                            <div>
+
+                                <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+
+                                <select id="category" name="category" required
+
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+
+                                    <option value="">Select a category</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="clothing">Clothing</option>
+                                    <option value="home">Home & Garden</option>
+                                    <option value="books">Books</option>
+                                    <option value="sports">Sports & Outdoors</option>
+                                    <option value="beauty">Beauty & Personal Care</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
+                                    <input type="text" id="brand" name="brand"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                        placeholder="e.g., Apple, Nike">
+                                </div>
+                                <div>
+                                    <label for="condition" class="block text-sm font-medium text-gray-700">Condition</label>
+                                    <select id="condition" name="condition"
+
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+
+                                        <option value="new">New</option>
+
+                                        <option value="used">Used</option>
+
+                                        <option value="refurbished">Refurbished</option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700">Product Description</label>
+
+                                <textarea id="description" name="description" rows="3"
+
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                    placeholder="Enter product description or features..."></textarea>
+
+                            </div>
+
+
+                            <div class="flex items-center space-x-2">
+
+                                <input type="checkbox" id="enableScraping" name="enableScraping"
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+
+                                <label for="enableScraping" class="text-sm font-medium text-gray-700">
+                                    Enable web scraping for additional data
+
+                                </label>
+                            </div>
+
+
+                            <button type="submit" id="predictBtn"
+
+                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fas fa-chart-line mr-2"></i>
+
+                                Predict Price
+
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+
+                <!-- Prediction Results -->
+
+                <div class="bg-white shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-chart-bar text-success mr-2"></i>Prediction Results
+
+                        </h3>
+                        <div id="predictionResults" class="space-y-4">
+
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-chart-line text-4xl mb-4"></i>
+
+                                <p>Enter product details and click "Predict Price" to see results</p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Prediction History -->
+
+            <div class="mt-8 bg-white shadow rounded-lg">
+
+                <div class="px-4 py-5 sm:p-6">
+
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+
+                        <i class="fas fa-history text-secondary mr-2"></i>Prediction History
+
+                    </h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+
+                            <thead class="bg-gray-50">
+                                <tr>
+
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted Price</th>
+
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+
+                                </tr>
+
+                            </thead>
+                            <tbody id="predictionHistory" class="bg-white divide-y divide-gray-200">
+
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No predictions yet</td>
+
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="tab-content hidden">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Price Trends Chart -->
+
+                <div class="bg-white shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-chart-line text-primary mr-2"></i>Price Trends
+
+                        </h3>
+                        <div style="height: 400px;">
+
+                            <canvas id="priceTrendsChart"></canvas>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Model Performance Chart -->
+                <div class="bg-white shadow rounded-lg">
+
+                    <div class="px-4 py-5 sm:p-6">
+
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+
+                            <i class="fas fa-robot text-accent mr-2"></i>Model Performance
+
+                        </h3>
+
+                        <div style="height: 400px;">
+
+                            <canvas id="modelPerformanceChart"></canvas>
+                    </div>
+
+                        </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Category Analysis -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <div class="bg-white shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-tags text-success mr-2"></i>Category Distribution
+
+                        </h3>
+                        <div style="height: 400px;">
+
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <div class="bg-white shadow rounded-lg">
+
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+
+                            <i class="fas fa-dollar-sign text-danger mr-2"></i>Price Range Analysis
+                        </h3>
+
+                        <div style="height: 400px;">
+
+                            <canvas id="priceRangeChart"></canvas>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Data Scraping Section -->
+
+        <section id="scraping" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <!-- Scraping Control -->
+                <div class="lg:col-span-1">
+
+                    <div class="bg-white shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                <i class="fas fa-spider text-secondary mr-2"></i>Data Scraping
+
+                            </h3>
+                            <form id="scrapingForm" class="space-y-4">
+
+                                <div>
+                                    <label for="scrapingUrls" class="block text-sm font-medium text-gray-700">URLs to Scrape</label>
+
+                                    <textarea id="scrapingUrls" name="scrapingUrls" rows="4" required
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+
+                                        placeholder="Enter URLs (one per line)&#10;https://example.com/product1&#10;https://example.com/product2"></textarea>
+
+                                </div>
+
+
+                                <div>
+
+                                    <label for="scrapingMode" class="block text-sm font-medium text-gray-700">Scraping Mode</label>
+
+                                    <select id="scrapingMode" name="scrapingMode"
+
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+
+                                        <option value="basic">Basic HTML</option>
+
+                                        <option value="selenium">Selenium (JS-heavy sites)</option>
+                                        <option value="async">Async Batch</option>
+
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="maxPages" class="block text-sm font-medium text-gray-700">Max Pages</label>
+                                    <input type="number" id="maxPages" name="maxPages" value="10" min="1" max="100"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                </div>
+
+                                <button type="submit" id="startScrapingBtn"
+                                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary">
+                                    <i class="fas fa-play mr-2"></i>
+                                    Start Scraping
+                                </button>
+
+                                <button type="button" id="stopScrapingBtn" disabled
+                                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-danger hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-danger disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-stop mr-2"></i>
+                                    Stop Scraping
+
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Scraping Status -->
+
+                <div class="lg:col-span-2">
+
+                    <div class="bg-white shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+
+                                <i class="fas fa-list text-primary mr-2"></i>Scraping Status
+
+                            </h3>
+
+                            <div id="scrapingStatus" class="space-y-4">
+
+                                <div class="text-center py-8 text-gray-500">
+
+                                    <i class="fas fa-spider text-4xl mb-4"></i>
+
+                                    <p>No active scraping sessions</p>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- Scraped Data Table -->
+
+            <div class="mt-8 bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">
+
+                            <i class="fas fa-database text-success mr-2"></i>Scraped Data
+                        </h3>
+
+                        <div class="flex space-x-2">
+                            <button id="exportDataBtn"
+
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fas fa-download mr-2"></i>Export CSV
+
+                            </button>
+                            <button id="clearDataBtn"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                <i class="fas fa-trash mr-2"></i>Clear Data
+
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scraped At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scrapedDataTable" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No scraped data yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <h3 class="text-lg font-medium text-gray-900 mt-4">Processing...</h3>
+                <p class="text-sm text-gray-500 mt-2" id="loadingMessage">Please wait while we process your request</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/api.js"></script>
+</body>
+</html>
