@@ -36,7 +36,7 @@ This is a single-page HTML file, so there are no build steps required for the fr
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/your-username/SocialDonationWebsite.git
+    git clone https://github.com/PUROJITA-SINGH/Skillcred-Project-G90.git
     cd SocialDonationWebsite
     ```
 2.  Open the `index.html` file directly in your web browser.
